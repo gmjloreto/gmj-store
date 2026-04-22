@@ -1150,3 +1150,49 @@ input:focus, textarea:focus, select:focus {
     .products-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
     .form-row { grid-template-columns: 1fr; }
 }
+
+/* --- ADMIN AUTH / LOGIN --- */
+.admin-auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-50);
+    padding: 2rem;
+}
+
+.auth-card {
+    background: var(--white);
+    padding: 3.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    border: 1px solid var(--gray-100);
+    animation: modalSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-title {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+}
+
+.auth-subtitle {
+    font-size: var(--text-sm);
+    color: var(--gray-400);
+    margin-bottom: 2.5rem;
+}
+
+.login-btn {
+    margin-top: 1rem;
+    height: 52px;
+    font-size: var(--text-base) !important;
+}
+
+.dashboard-hidden {
+    display: none;
+}
