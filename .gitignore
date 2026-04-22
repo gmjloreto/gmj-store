@@ -1,0 +1,10 @@
+
+GEMINI.md
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+
+*.log

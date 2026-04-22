@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle | GMJ Store</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+    
+    <!-- Tela de Login -->
+    <div id="login-container" class="admin-auth-container">
+        <div class="admin-card auth-card">
+            <h1 class="auth-title">GMJ ADMIN</h1>
+            <p class="auth-subtitle">Acesse o sistema de gestão</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="email" placeholder="admin@gmj.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-buy login-btn">Entrar no Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dashboard" class="dashboard-hidden">
+        <nav class="admin-top-nav">
+            <div class="container admin-nav-content">
+                <div class="admin-logo-group">  
+                    <span class="sidebar-logo">GMJ ANALYTICS</span>
+                    <div class="admin-nav-links" id="adminNav">
+                        <a href="#overview-section" class="nav-item active">Visão Geral</a>
+                        <a href="#orders-section" class="nav-item">Pedidos</a>
+                        <a href="#products-section" class="nav-item">Produtos</a>
+                    </div>
+                </div>
+                <div class="admin-user-actions">
+                    <div id="user-display" class="user-email-display">admin@gmj.com</div>
+                    <button id="btn-logout" class="btn-logout-mini">Sair</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content container">
+            <!-- Seção Visão Geral -->
+            <section id="overview-section">
+                <header class="dashboard-header-simple">
+                    <h1 class="admin-section-title">Visão Geral</h1>
+                    <p class="admin-section-subtitle">Gerenciamento em tempo real da loja.</p>
+                </header>
+
+                <!-- Métricas -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Faturamento (Pagos)</span>
+                        <h2 class="metric-value" id="m-revenue">R$ 0,00</h2>
+                        <span class="metric-trend-positive">↑ 0% este mês</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Total de Pedidos</span>
+                        <h2 class="metric-value" id="m-orders">0</h2>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Ticket Médio</span>
+                        <h2 class="metric-value" id="m-average">R$ 0,00</h2>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Itens Vendidos</span>
+                        <h2 class="metric-value" id="m-sold">0</h2>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="card chart-box">
+                        <h3 class="chart-title">Fluxo de Vendas</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="card chart-box">
+                        <h3 class="chart-title">Status dos Pedidos</h3>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção Pedidos -->
+            <section id="orders-section" class="card">
+                <div class="section-header-row">
+                    <h2 class="card-title">Pedidos Recentes</h2>
+                    <select id="filter-status" class="filter-select">
+                        <option value="all">Todos os Status</option>
+                        <option value="pending">Pendente</option>
+                        <option value="paid">Pago</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ref.</th>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção Produtos -->
+            <section id="products-section" class="card">
+                <div class="section-header-row">
+                    <h2 class="card-title">Estoque de Produtos</h2>
+                    <button id="btn-add-product" class="btn-buy add-btn">+ Novo Item</button>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Img</th>
+                                <th>Produto</th>
+                                <th>Preço</th>
+                                <th>Stock</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-products-list"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modais -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content product-modal-content">
+            <h2 id="modal-title" class="modal-title-text">Configurar Produto</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group"><label>Nome</label><input type="text" id="p-name" required></div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" id="p-price" required></div>
+                    <div class="form-group"><label>Estoque</label><input type="number" id="p-stock" required></div>
+                </div>
+                <div class="form-group"><label>URL Imagem Principal *</label><input type="url" id="p-image" required></div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>URL Imagem 2</label><input type="url" id="p-image-2"></div>
+                    <div class="form-group"><label>URL Imagem 3</label><input type="url" id="p-image-3"></div>
+                </div>
+                <div class="form-group"><label>Descrição</label><textarea id="p-description" rows="3"></textarea></div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-close-modal" class="btn-cancel flex-1">Cancelar</button>
+                    <button type="submit" class="btn-buy flex-2">Salvar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Pedido -->
+    <div id="order-details-modal" class="modal">
+        <div class="modal-content order-modal-content">
+            <div class="modal-header-row">
+                <h2 class="modal-title-main">Detalhes do Pedido <span id="det-order-id" class="order-id-span"></span></h2>
+                <button id="btn-close-order-modal" class="btn-close-x">&times;</button>
+            </div>
+            
+            <div class="order-details-grid">
+                <div class="details-column">
+                    <h3 class="details-subtitle">Dados do Comprador</h3>
+                    <p><strong>Nome:</strong> <span id="det-cust-name"></span></p>
+                    <p><strong>CPF:</strong> <span id="det-cust-cpf"></span></p>
+                    <p><strong>E-mail:</strong> <span id="det-cust-email"></span></p>
+                    <p><strong>Telefone:</strong> <span id="det-cust-phone"></span></p>
+                </div>
+                <div class="details-column">
+                    <h3 class="details-subtitle">Entrega / Retirada</h3>
+                    <p><strong>Método:</strong> <span id="det-ship-method"></span></p>
+                    <div id="det-address-container" class="address-container">
+                        <p><strong>Endereço:</strong> <span id="det-ship-address"></span></p>
+                        <p><strong>Cidade/UF:</strong> <span id="det-ship-city"></span></p>
+                        <p><strong>CEP:</strong> <span id="det-ship-cep"></span></p>
+                    </div>
+                    <p><strong>Status:</strong> <span id="det-order-status" class="status-pill"></span></p>
+                </div>
+            </div>
+
+            <div class="order-items-section">
+                <h3 class="details-subtitle">Itens do Pedido</h3>
+                <div id="det-items-list" class="items-summary-box"></div>
+                <div class="order-total-row">
+                    <span>Total Pago</span>
+                    <span id="det-order-total"></span>
+                </div>
+            </div>
+
+            <div class="modal-actions-footer">
+                <button id="btn-print-order" class="btn-edit flex-1">Imprimir</button>
+                <button id="btn-close-order-modal-2" class="btn-cancel flex-1">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../config/config.js"></script>
+    <script src="../js/admin.js" type="module"></script>
+</body>
+</html>

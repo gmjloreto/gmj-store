@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Produto | GMJ Store</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../assets/images/gmjstore_black.svg" alt="GMJ STORE" class="logo-img">
+                </a>
+            </div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="../index.html">Início</a>
+                <a href="../index.html#products">Produtos</a>
+                <a href="../pages/admin.html" class="admin-link">Admin</a>
+            </div>
+
+            <div class="nav-actions">
+                <div class="cart-icon">
+                    🛒 <span id="cart-count">0</span>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div id="product-detail-container" class="product-detail-grid">
+            <div id="loading" class="loading-state">Carregando detalhes...</div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-logo">GMJ STORE</div>
+            <p class="copyright">&copy; 2026 GMJ - Grupo de Jovens. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Modal do Carrinho -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-sidebar-header">
+            <h3>Seu Carrinho</h3>
+            <button id="close-cart" class="close-cart">×</button>
+        </div>
+        <div id="cart-items-list" class="cart-items-list"></div>
+        <div class="cart-sidebar-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-value">R$ 0,00</span>
+            </div>
+            <button class="btn-buy checkout-btn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <script src="../config/config.js"></script>
+    <script src="../js/components/cart.js" type="module"></script>
+    <script src="../js/product-details.js" type="module"></script>
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        const cartIcon = document.querySelector('.cart-icon');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const closeCart = document.getElementById('close-cart');
+        const checkoutBtn = document.querySelector('.checkout-btn');
+
+        if (menuToggle) menuToggle.onclick = () => navLinks.classList.toggle('open');
+        if (cartIcon) cartIcon.onclick = () => cartSidebar.classList.add('open');
+        if (closeCart) closeCart.onclick = () => cartSidebar.classList.remove('open');
+        
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.Cart) window.Cart.checkout();
+            });
+        }
+    </script>
+</body>
+</html>

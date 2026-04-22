@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Compra | GMJ Store</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../assets/images/gmjstore_black.svg" alt="GMJ STORE" class="logo-img">
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <div id="checkout-form-container" class="admin-card checkout-wrapper">
+            <h2 class="checkout-title">Finalizar Pedido</h2>
+            
+            <form id="checkout-form">
+                <!-- Dados Pessoais -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome Completo *</label>
+                        <input type="text" id="cust-name" required placeholder="Seu nome">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF *</label>
+                        <input type="text" id="cust-cpf" required placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-mail *</label>
+                        <input type="email" id="cust-email" required placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone/WhatsApp *</label>
+                        <input type="tel" id="cust-phone" required placeholder="(00) 00000-0000" maxlength="15">
+                    </div>
+                </div>
+
+                <!-- Opção de Retirada / Endereço de Entrega -->
+                <div class="delivery-section">
+                    <div class="pickup-option-group">
+                        <input type="checkbox" id="pickup-option" class="checkbox-input">
+                        <label for="pickup-option" class="pickup-label">Retirar na Igreja</label>
+                    </div>
+                    <div id="pickup-info" class="pickup-info-box">
+                        🗓️ <strong>Retirada disponível:</strong> Somente aos Sábados, com agendamento.
+                    </div>
+
+                    <h3 id="address-delivery-label" class="address-label">Endereço de Entrega</h3>
+                    <div id="address-fields-wrapper" class="address-fields-grid-1">
+                        <div class="form-group">
+                            <label>CEP *</label>
+                            <input type="text" id="cust-cep" required placeholder="00000-000" maxlength="9">
+                        </div>
+                        <div class="form-group">
+                            <label>Rua/Logradouro *</label>
+                            <input type="text" id="cust-street" required placeholder="Nome da rua">
+                        </div>
+                    </div>
+
+                    <div id="address-fields-wrapper-2" class="address-fields-grid-2">
+                        <div class="form-group">
+                            <label>Número/Complemento *</label>
+                            <input type="text" id="cust-number" required placeholder="Ex: 123, Ap 4">
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro *</label>
+                            <input type="text" id="cust-neighborhood" required placeholder="Bairro">
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade / UF *</label>
+                            <input type="text" id="cust-city-uf" readonly class="readonly-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="shipping-info" class="shipping-alert">
+                    🚚 <strong>Frete <span id="ship-region"></span>:</strong> <span id="ship-price"></span> (<span id="ship-days"></span> dias úteis)
+                </div>
+
+                <!-- Resumo -->
+                <div class="summary-box">
+                    <h3>Resumo do Pedido</h3>
+                    <div id="checkout-summary"></div>
+                    <div class="summary-item">
+                        <span>Frete</span>
+                        <span id="summary-shipping-price">R$ 0,00</span>
+                    </div>
+                    <hr class="summary-divider">
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span id="checkout-total">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="privacy-terms">
+                    <input type="checkbox" id="privacy-check" class="checkbox-input">
+                    <label for="privacy-check" class="privacy-label">
+                        Li e concordo que meus dados serão utilizados exclusivamente para o processamento deste pedido. Seus dados estão seguros e não serão compartilhados.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-buy checkout-submit-btn">Gerar Pagamento PIX</button>
+            </form>
+        </div>
+
+        <!-- Tela de Pagamento (PIX) -->
+        <div id="pix-payment-container" class="admin-card pix-container">
+            <div class="status-pill status-pendente">Pedido #<span id="display-order-id"></span></div>
+            <h2>Pagamento PIX</h2>
+            <div class="pix-qr-box">
+                <img src="../assets/images/qrcode.png" alt="QR Code PIX" class="pix-qr-img">
+            </div>
+            <div class="pix-key-box">
+                <small class="pix-label">Chave PIX (Telefone)</small>
+                <div id="pix-key-text" class="pix-key">(11) 95279 - 9311</div>
+                <button id="btn-copy-pix" class="btn-edit full-width">Copiar Chave PIX</button>
+            </div>
+            <div class="value-highlight">
+                <strong id="display-total">R$ 0,00</strong>
+            </div>
+            <a href="../index.html" class="btn-cancel full-width">Voltar para a Loja</a>
+        </div>
+    </main>
+
+    <script src="../config/config.js"></script>
+    <script src="../js/components/checkout.js" type="module"></script>
+</body>
+</html>
