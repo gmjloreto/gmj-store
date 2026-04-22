@@ -9,6 +9,16 @@ let state = {
     charts: {}
 };
 
+// Controle de tentativas de login (persistente)
+const getAuthState = () => {
+    const saved = localStorage.getItem('gmj_auth_state');
+    return saved ? JSON.parse(saved) : { attempts: 0, lockoutUntil: 0 };
+};
+
+const saveAuthState = (state) => {
+    localStorage.setItem('gmj_auth_state', JSON.stringify(state));
+};
+
 async function initAdmin() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) return showLogin();
@@ -280,11 +290,36 @@ window.deleteProduct = async (id) => {
 // Listeners
 document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const auth = getAuthState();
+
+    // Verifica bloqueio
+    if (Date.now() < auth.lockoutUntil) {
+        const remaining = Math.ceil((auth.lockoutUntil - Date.now()) / 1000);
+        showToast(`Muitas tentativas. Aguarde ${remaining}s.`, "error");
+        return;
+    }
+
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    
     const { error } = await _supabase.auth.signInWithPassword({ email, password });
-    if (error) showToast("Acesso negado: " + error.message, "error"); 
-    else initAdmin();
+    
+    if (error) {
+        auth.attempts++;
+        if (auth.attempts >= 5) {
+            auth.lockoutUntil = Date.now() + (30 * 1000); // 30 segundos de bloqueio
+            auth.attempts = 0;
+            showToast("Muitas tentativas falhas. Bloqueado por 30s.", "error");
+        } else {
+            showToast(`Acesso negado (${auth.attempts}/5)`, "error");
+        }
+    } else {
+        auth.attempts = 0;
+        auth.lockoutUntil = 0;
+    }
+    
+    saveAuthState(auth);
+    if (!error) initAdmin();
 });
 
 document.getElementById('product-form')?.addEventListener('submit', async (e) => {
