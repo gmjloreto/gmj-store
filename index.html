@@ -23,7 +23,6 @@
                 <a href="#hero">Início</a>
                 <a href="#products">Produtos</a>
                 <a href="#about">Sobre</a>
-                <a href="pages/admin.html" class="admin-link">Admin</a>
             </div>
 
             <div class="nav-actions">
@@ -88,13 +87,38 @@ Somos um grupo de jovens com a missão de evangelizar, resgatar vidas e formar l
     </main>
 
     <footer class="footer">
-        <div class="container footer-content">
-            <div class="footer-logo">GMJ STORE</div>
-            <div class="footer-social">
-                <a href="https://www.instagram.com/gmjloreto/">Instagram</a>
-                <a href="https://api.whatsapp.com/send?phone=5511952799311&text=Ol%C3%A1%2C%20vim%20da%20GMJ%20Store%20e%20estou%20com%20uma%20d%C3%BAvida!">Contato</a>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">GMJ<span>STORE</span></div>
+                    <p class="footer-text">Artigos religiosos que inspiram fé e devoção. Qualidade e tradição para sua casa e comunidade.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Navegação</h5>
+                    <ul class="footer-links">
+                        <li><a href="#hero">Início</a></li>
+                        <li><a href="#products">Produtos</a></li>
+                        <li><a href="#about">Sobre Nós</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Social</h5>
+                    <ul class="footer-links">
+                        <li><a href="https://www.instagram.com/gmjloreto/">Instagram</a></li>
+                        <li><a href="https://api.whatsapp.com/send?phone=5511952799311">WhatsApp</a></li>
+                        <li><a href="#">YouTube</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Admin</h5>
+                    <ul class="footer-links">
+                        <li><a href="pages/admin.html">Acesso Restrito</a></li>
+                    </ul>
+                </div>
             </div>
-            <p class="copyright">&copy; 2026 GMJ - Grupo de Jovens. Todos os direitos reservados.</p>
+            <div class="footer-bottom">
+                <p>&copy; 2026 GMJ Loreto. Todos os direitos reservados.</p>
+            </div>
         </div>
     </footer>
 
@@ -116,7 +140,7 @@ Somos um grupo de jovens com a missão de evangelizar, resgatar vidas e formar l
 
     <script src="config/config.js"></script>
     <script src="js/components/cart.js" type="module"></script>
-    <script src="js/carousel.js"></script>
+    <script src="js/carousel.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
     <script>
         const menuToggle = document.getElementById('menuToggle');
