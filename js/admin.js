@@ -2,6 +2,11 @@ import { _supabase } from './services/supabase.js';
 import { formatCurrency } from './utils/helpers.js';
 import { showToast } from './utils/toast.js';
 
+// Cloudinary Configuration
+const CLOUDINARY_CLOUD_NAME = 'dnt2b4nd8'; // O usuário preencherá manualmente
+const CLOUDINARY_UPLOAD_PRESET = 'store_images'; // Preset unsigned configurado no Cloudinary
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/dnt2b4nd8/image/upload`;
+
 let state = {
     products: [],
     orders: [],
@@ -25,7 +30,72 @@ async function initAdmin() {
     
     document.getElementById('user-display').innerText = session.user.email;
     showDashboard();
+    setupImageUploads(); // Initialize image upload listeners
     await refreshData();
+}
+
+// Image Upload Logic
+function setupImageUploads() {
+    const uploadInputs = document.querySelectorAll('.p-image-upload');
+    uploadInputs.forEach(input => {
+        input.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const targetId = input.getAttribute('data-target');
+            const previewId = `${targetId}-preview`;
+            const previewEl = document.getElementById(previewId);
+            const hiddenInput = document.getElementById(targetId);
+
+            try {
+                // Show local preview immediately (optional, but good for UX)
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewEl.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+
+                // Start Upload
+                previewEl.classList.add('loading');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                const response = await fetch(CLOUDINARY_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
+
+                const data = await response.json();
+                
+                // Success: update hidden input and final preview
+                hiddenInput.value = data.secure_url;
+                previewEl.innerHTML = `<img src="${data.secure_url}" alt="Preview">`;
+                showToast("Imagem enviada com sucesso!", "success");
+
+            } catch (error) {
+                console.error(error);
+                showToast("Erro no upload: " + error.message, "error");
+                previewEl.innerHTML = `<span>Erro no upload</span>`;
+            } finally {
+                previewEl.classList.remove('loading');
+            }
+        });
+    });
+}
+
+function updateImagePreview(id, url) {
+    const previewEl = document.getElementById(`${id}-preview`);
+    if (previewEl) {
+        if (url) {
+            previewEl.innerHTML = `<img src="${url}" alt="Preview">`;
+        } else {
+            previewEl.innerHTML = `<span>Sem imagem</span>`;
+        }
+    }
 }
 
 async function refreshData() {
@@ -152,7 +222,6 @@ function renderProducts() {
 }
 
 function renderCharts() {
-    // Destruir gráficos anteriores se existirem
     if (state.charts.revenue) state.charts.revenue.destroy();
     if (state.charts.status) state.charts.status.destroy();
 
@@ -160,7 +229,6 @@ function renderCharts() {
     const statusCtx = document.getElementById('statusChart')?.getContext('2d');
 
     if (revenueCtx) {
-        // Agrupar faturamento por data (últimos 7 dias)
         const last7Days = [...Array(7)].map((_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -220,27 +288,23 @@ function renderCharts() {
             options: { 
                 cutout: '70%', 
                 responsive: true,
-                maintainAspectRatio: false, // Permite que o CSS controle a altura
+                maintainAspectRatio: false,
                 plugins: { legend: { position: 'bottom' } } 
             }
         });
     }
 }
 
-// Global actions
 window.confirmPayment = async (id) => {
     if (confirm('Marcar pedido como PAGO? Isso reduzirá o estoque dos itens.')) {
         try {
-            // Tenta chamar RPC se existir, senão faz manual
             const { error } = await _supabase.rpc('confirm_order_payment', { p_order_id: id });
             
             if (error) {
-                // Fallback manual se a RPC não existir
                 const order = state.orders.find(o => o.id === id);
                 const { error: updateError } = await _supabase.from('orders').update({ status: 'paid' }).eq('id', id);
                 if (updateError) throw updateError;
                 
-                // Atualiza estoque manualmente para cada item
                 for (const item of order.items) {
                     const product = state.products.find(p => p.id === item.id);
                     if (product) {
@@ -272,9 +336,15 @@ window.editProduct = (id) => {
     document.getElementById('p-price').value = p.price;
     document.getElementById('p-stock').value = p.stock || 0;
     document.getElementById('p-description').value = p.description || '';
+    
     document.getElementById('p-image').value = p.image_url;
     document.getElementById('p-image-2').value = p.image_url_2 || '';
     document.getElementById('p-image-3').value = p.image_url_3 || '';
+
+    updateImagePreview('p-image', p.image_url);
+    updateImagePreview('p-image-2', p.image_url_2);
+    updateImagePreview('p-image-3', p.image_url_3);
+
     document.getElementById('modal-title').innerText = 'Editar Produto';
     document.getElementById('product-modal').classList.add('show');
 };
@@ -287,12 +357,10 @@ window.deleteProduct = async (id) => {
     }
 };
 
-// Listeners
 document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const auth = getAuthState();
 
-    // Verifica bloqueio
     if (Date.now() < auth.lockoutUntil) {
         const remaining = Math.ceil((auth.lockoutUntil - Date.now()) / 1000);
         showToast(`Muitas tentativas. Aguarde ${remaining}s.`, "error");
@@ -307,7 +375,7 @@ document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     if (error) {
         auth.attempts++;
         if (auth.attempts >= 5) {
-            auth.lockoutUntil = Date.now() + (30 * 1000); // 30 segundos de bloqueio
+            auth.lockoutUntil = Date.now() + (30 * 1000);
             auth.attempts = 0;
             showToast("Muitas tentativas falhas. Bloqueado por 30s.", "error");
         } else {
@@ -355,6 +423,11 @@ document.getElementById('btn-logout')?.addEventListener('click', async () => {
 document.getElementById('btn-add-product')?.addEventListener('click', () => {
     document.getElementById('product-form').reset();
     document.getElementById('product-id').value = '';
+    
+    updateImagePreview('p-image', null);
+    updateImagePreview('p-image-2', null);
+    updateImagePreview('p-image-3', null);
+
     document.getElementById('modal-title').innerText = 'Novo Produto';
     document.getElementById('product-modal').classList.add('show');
 });
@@ -368,7 +441,6 @@ document.getElementById('filter-status')?.addEventListener('change', (e) => {
     renderOrders();
 });
 
-// Lógica de destaque da Navbar
 document.querySelectorAll('#adminNav .nav-item').forEach(link => {
     link.addEventListener('click', (e) => {
         document.querySelectorAll('#adminNav .nav-item').forEach(n => n.classList.remove('active'));
