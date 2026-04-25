@@ -37,9 +37,17 @@ function renderProducts(products) {
         const card = document.createElement('div');
         card.className = 'product-card';
         
+        // Regra de Estoque GEMINI.md: Se has_sizes, estoque vem das variações (já somado no campo stock pelo admin)
         const isOutOfStock = !product.stock || product.stock <= 0;
         const mainImg = product.image_url || 'https://via.placeholder.com/600';
         const hoverImg = product.image_url_2 || mainImg;
+
+        // Se tem tamanhos, não permite adicionar direto. Obriga ver detalhes.
+        const buttonHTML = product.has_sizes 
+            ? `<a href="pages/product-details.html?id=${product.id}" class="btn-buy-link">Ver Opções</a>`
+            : `<button class="btn-buy" data-id="${product.id}" ${isOutOfStock ? 'disabled' : ''}>
+                ${isOutOfStock ? 'Esgotado' : 'Adicionar ao Carrinho'}
+               </button>`;
 
         card.innerHTML = `
             <a href="pages/product-details.html?id=${product.id}" style="text-decoration: none; color: inherit;">
@@ -59,22 +67,24 @@ function renderProducts(products) {
                     <p class="product-price">R$ ${Number(product.price).toFixed(2)}</p>
                 </div>
             </a>
-            <div style="padding: 0 1.5rem 1.5rem 1.5rem;">
-                <button class="btn-buy" data-id="${product.id}" ${isOutOfStock ? 'disabled' : ''}>
-                    ${isOutOfStock ? 'Esgotado' : 'Adicionar ao Carrinho'}
-                </button>
+            <div class="product-card-actions">
+                ${buttonHTML}
             </div>
         `;
         productsGrid.appendChild(card);
     });
 
-    // Adiciona eventos aos botões de compra
+    // Adiciona eventos aos botões de compra (apenas para produtos de tamanho único)
     document.querySelectorAll('.btn-buy').forEach(button => {
         button.addEventListener('click', (e) => {
             const id = e.target.getAttribute('data-id');
             const product = allProducts.find(p => p.id == id);
-            if (product) {
-                Cart.addItem(product);
+            if (product && !product.has_sizes) {
+                // Adiciona como Tamanho Único garantido
+                Cart.addItem({
+                    ...product,
+                    size: 'Tamanho Único'
+                });
             }
         });
     });
