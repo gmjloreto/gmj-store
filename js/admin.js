@@ -390,13 +390,28 @@ function setupOnePageNavigation() {
     const navItems = document.querySelectorAll('#adminNav .nav-item');
     const adminMenuToggle = document.getElementById('adminMenuToggle');
     const adminNav = document.getElementById('adminNav');
-    if (adminMenuToggle) adminMenuToggle.onclick = () => adminNav.classList.toggle('open');
+    
+    if (adminMenuToggle) {
+        adminMenuToggle.onclick = (e) => {
+            e.stopPropagation();
+            adminNav.classList.toggle('open');
+        };
+    }
+
+    // Fecha o menu ao clicar em qualquer item
     navItems.forEach(item => {
         item.onclick = () => {
             navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active');
             adminNav?.classList.remove('open');
         };
+    });
+
+    // Fecha o menu ao clicar fora dele
+    document.addEventListener('click', (e) => {
+        if (adminNav?.classList.contains('open') && !adminNav.contains(e.target) && e.target !== adminMenuToggle) {
+            adminNav.classList.remove('open');
+        }
     });
 }
 
