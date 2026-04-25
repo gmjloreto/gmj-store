@@ -46,6 +46,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (nextBtn) nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
     if (prevBtn) prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
 
+    // Suporte a Touch (Swipe)
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    container.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const threshold = 50;
+        if (touchEndX < touchStartX - threshold) showSlide(currentSlide + 1);
+        if (touchEndX > touchStartX + threshold) showSlide(currentSlide - 1);
+    }
+
     setInterval(() => {
         showSlide(currentSlide + 1);
     }, 5000);
