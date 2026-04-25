@@ -31,6 +31,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const slides = document.querySelectorAll('.carousel-slide');
     let currentSlide = 0;
+    let autoPlayInterval;
+
+    function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayInterval = setInterval(() => {
+            showSlide(currentSlide + 1);
+        }, 5000);
+    }
+
+    function stopAutoPlay() {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+    }
 
     function showSlide(index) {
         if (slides.length === 0) return;
@@ -43,8 +55,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         slides[currentSlide].classList.add('active');
     }
 
-    if (nextBtn) nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
-    if (prevBtn) prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            showSlide(currentSlide + 1);
+            startAutoPlay();
+        });
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            showSlide(currentSlide - 1);
+            startAutoPlay();
+        });
+    }
 
     // Suporte a Touch (Swipe)
     let touchStartX = 0;
@@ -61,11 +84,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function handleSwipe() {
         const threshold = 50;
-        if (touchEndX < touchStartX - threshold) showSlide(currentSlide + 1);
-        if (touchEndX > touchStartX + threshold) showSlide(currentSlide - 1);
+        if (touchEndX < touchStartX - threshold) {
+            showSlide(currentSlide + 1);
+            startAutoPlay();
+        }
+        if (touchEndX > touchStartX + threshold) {
+            showSlide(currentSlide - 1);
+            startAutoPlay();
+        }
     }
 
-    setInterval(() => {
-        showSlide(currentSlide + 1);
-    }, 5000);
+    // Inicia o auto-play
+    startAutoPlay();
 });
