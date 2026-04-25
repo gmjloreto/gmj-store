@@ -15,15 +15,15 @@ A **GMJ Store** é uma plataforma de e-commerce moderna e completa para artigos 
 ### Administrativo (Dashboard One-Page)
 - **Visão Geral:** Métricas e gráficos interativos (Chart.js) para faturamento e status de pedidos.
 - **Gestão de Pedidos:** Detalhes completos do comprador, endereço de entrega e itens comprados.
-- **Gestão de Produtos:** CRUD completo com upload real de imagens via Fetch API para Cloudinary.
+- **Gestão de Produtos:** CRUD completo com controle de estoque relacional (has_sizes) e upload via Cloudinary.
 - **Gestão de Carrossel:** Controle total sobre os slides da home (título, subtítulo e imagem).
-- **Navegação Inteligente:** ScrollSpy e âncoras para alternar entre seções sem recarregar a página.
-- **Segurança:** Autenticação via Supabase Auth com proteção de tentativas de login.
+- **Navegação Inteligente:** Botão de retorno à loja, ScrollSpy e menu mobile integrado.
+- **Segurança:** Autenticação via Supabase Auth e validação de permissão administrativa.
 
 ## 🛠️ Tecnologias
 
 - **Frontend:** HTML5, CSS3 (Vanilla), JavaScript (ES Modules).
-- **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Auth).
+- **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC).
 - **Upload de Imagens:** [Cloudinary](https://cloudinary.com/).
 - **Gráficos:** [Chart.js](https://www.chartjs.org/).
 - **Design:** SaaS Moderno, Glassmorphism e tipografia 'Inter'.
@@ -38,8 +38,7 @@ A **GMJ Store** é uma plataforma de e-commerce moderna e completa para artigos 
 │   └── admin.html           # Painel Administrativo (One-Page)
 ├── js/
 │   ├── app.js               # Lógica principal da vitrine
-│   ├── admin.js             # Inteligência do Dashboard e 
-Gestão
+│   ├── admin.js             # Inteligência do Dashboard e Gestão
 │   ├── carousel.js          # Script do carrossel dinâmico
 │   ├── services/            # Cliente Supabase centralizado
 │   ├── components/          # Módulos de Cart e Checkout
@@ -56,16 +55,19 @@ Gestão
    - Recomendamos o uso da extensão **Live Server** no VS Code para rodar o projeto localmente.
 
 2. **Configuração do Banco de Dados:**
-   - Configure as tabelas `products`, `orders` e `carousel_slides` no seu projeto Supabase.
-   - Habilite o Row Level Security (RLS) para proteger os dados.
+   - Configure as tabelas `products`, `product_sizes`, `orders`, `order_items` e `carousel_slides`.
+   - Utilize as RPCs oficiais para controle seguro de estoque.
 
 3. **Configuração de Imagens:**
    - Crie uma conta no Cloudinary e configure um **unsigned upload preset**.
 
 4. **Execução:**
    - Abra o `index.html` através do Live Server.
-   - O painel administrativo está em `/pages/admin.html`.
+   - O acesso admin é restrito a usuários cadastrados na tabela `admins`.
 
 ## 🎨 Design System
 
-O projeto utiliza uma paleta de cores refinada baseada em tons de cinza (`#18181b` a `#f9f9fb`) com o preto como cor primária e o verde (`#3ecf8e`) para destaques de sucesso. O layout é responsivo e utiliza conceitos modernos de interface para garantir uma experiência premium.
+O projeto utiliza um design system premium inspirado em SaaS modernos:
+- **Cores:** Primária (`#000000`), Accent/Destaque (`#0a3ca7`), Sucesso (`#10b981`) e Erro (`#ef4444`).
+- **Tipografia:** Família 'Inter' para legibilidade e visual limpo.
+- **Componentes:** Border-radius generosos, sombras suaves e transições fluidas.
