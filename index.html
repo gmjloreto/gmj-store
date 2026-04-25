@@ -153,6 +153,14 @@ Somos um grupo de jovens com a missão de evangelizar, resgatar vidas e formar l
         if (cartIcon) cartIcon.onclick = () => cartSidebar.classList.add('open');
         if (closeCart) closeCart.onclick = () => cartSidebar.classList.remove('open');
         
+        const checkoutBtn = document.querySelector('.cart-sidebar .checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.onclick = (e) => {
+                e.preventDefault();
+                if (window.Cart) window.Cart.checkout();
+            };
+        }
+        
         navLinks.querySelectorAll('a').forEach(link => {
             link.onclick = () => navLinks.classList.remove('open');
         });
