@@ -8,25 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* Ajustes para One-Page */
-        html { scroll-behavior: smooth; }
-        .main-content { display: flex; flex-direction: column; gap: 4rem; padding-top: 2rem; padding-bottom: 5rem; }
-        section { scroll-margin-top: 100px; }
-        .admin-top-nav { 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            background: rgba(255, 255, 255, 0.9); 
-            backdrop-filter: blur(10px); 
-            border-bottom: 1px solid var(--gray-100); 
-            color: var(--primary) !important;
-        }
-        .sidebar-logo { color: var(--primary); }
-        .admin-body .nav-item { color: var(--gray-500); }
-        .admin-body .nav-item:hover, .admin-body .nav-item.active { background: var(--gray-100); color: var(--primary); }
-        .user-email-display { color: var(--gray-400); }
-    </style>
 </head>
 <body class="admin-body">
     
@@ -55,6 +36,11 @@
             <div class="container admin-nav-content">
                 <div class="admin-logo-group">  
                     <span class="sidebar-logo">GMJ ANALYTICS</span>
+                    <button class="menu-toggle" id="adminMenuToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                     <div class="admin-nav-links" id="adminNav">
                         <a href="#overview-section" class="nav-item active">Visão Geral</a>
                         <a href="#orders-section" class="nav-item">Pedidos</a>
@@ -63,6 +49,9 @@
                     </div>
                 </div>
                 <div class="admin-user-actions">
+                    <a href="../index.html" class="btn-logout-mini" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+                        Voltar à Loja
+                    </a>
                     <div id="user-display" class="user-email-display">admin@gmj.com</div>
                     <button id="btn-logout" class="btn-logout-mini">Sair</button>
                 </div>
@@ -133,6 +122,9 @@
                         </thead>
                         <tbody id="orders-list"></tbody>
                     </table>
+                </div>
+                <div id="load-more-orders-container" style="text-align:center; margin-top:2rem;">
+                    <button id="btn-load-more-orders" class="btn-outline" style="width:200px;">Carregar mais pedidos</button>
                 </div>
             </section>
 
@@ -215,11 +207,38 @@
                 <div class="product-form-grid">
                     <div class="form-column">
                         <div class="form-group"><label>Nome do Produto</label><input type="text" id="p-name" required></div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" id="p-price" required></div>
-                            <div class="form-group"><label>Estoque</label><input type="number" id="p-stock" required></div>
+                        
+                        <!-- Toggle de Variações -->
+                        <div class="admin-toggle-group">
+                            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+                                <input type="checkbox" id="p-has-sizes" class="checkbox-input" style="width:18px; height:18px;">
+                                <label for="p-has-sizes" style="margin:0; cursor:pointer;">Possui variações de tamanho?</label>
+                            </div>
+                            <small style="color:var(--gray-400); display:block; margin-bottom:1rem;">Marque para habilitar estoque individual (P ao G2).</small>
                         </div>
-                        <div class="form-group"><label>Descrição</label><textarea id="p-description" rows="8"></textarea></div>
+
+                        <!-- Estoque Geral (Tamanho Único) -->
+                        <div id="general-stock-container" class="form-group">
+                            <label>Estoque (Tamanho Único)</label>
+                            <input type="number" id="p-stock" required>
+                        </div>
+
+                        <!-- Estoque por Variação (Escondido por padrão) -->
+                        <div id="size-stock-container" class="hidden">
+                            <label>Estoque por Tamanho</label>
+                            <div class="size-stock-admin-grid">
+                                <div class="form-group stock-field-mini"><label>P</label><input type="number" id="p-stock-p" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>M</label><input type="number" id="p-stock-m" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>G</label><input type="number" id="p-stock-g" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>GG</label><input type="number" id="p-stock-gg" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>XG</label><input type="number" id="p-stock-xg" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>G1</label><input type="number" id="p-stock-g1" value="0"></div>
+                                <div class="form-group stock-field-mini"><label>G2</label><input type="number" id="p-stock-g2" value="0"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" id="p-price" required></div>
+                        <div class="form-group"><label>Descrição</label><textarea id="p-description" rows="5"></textarea></div>
                     </div>
                     <div class="upload-column">
                         <div class="form-group">
@@ -293,25 +312,6 @@
             </div>
         </div>
     </div>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="footer-logo">GMJ<span>STORE</span></div>
-                    <p class="footer-text">Painel Administrativo para gestão estratégica.</p>
-                </div>
-                <div class="footer-col">
-                    <h5>Links Rápidos</h5>
-                    <ul class="footer-links">
-                        <li><a href="../index.html">Ver Loja</a></li>
-                        <li><a href="#admin-dashboard">Início</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom"><p>&copy; 2026 GMJ Loreto. Gestão Interna.</p></div>
-        </div>
-    </footer>
 
     <script src="../config/config.js"></script>
     <script src="../js/admin.js" type="module"></script>
