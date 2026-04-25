@@ -13,17 +13,21 @@ export const Cart = {
     },
 
     addItem(product) {
-        if (!product.stock || product.stock <= 0) {
-            showToast(`Desculpe, ${product.name} está esgotado.`, 'error');
+        // Usa o estoque já validado e passado pelo componente de origem
+        const targetStock = product.stock;
+
+        if (!targetStock || targetStock <= 0) {
+            showToast(`Desculpe, o tamanho ${product.size || ''} está esgotado.`, 'error');
             return false;
         }
 
         let cart = this.getItems();
-        const existingItem = cart.find(item => item.id === product.id);
+        // A chave única agora é ID + Tamanho
+        const existingItem = cart.find(item => item.id === product.id && item.size === product.size);
 
         if (existingItem) {
-            if (existingItem.quantity >= product.stock) {
-                showToast(`Apenas ${product.stock} unidades disponíveis em estoque.`, 'error');
+            if (existingItem.quantity >= targetStock) {
+                showToast(`Apenas ${targetStock} unidades disponíveis em estoque.`, 'error');
                 return false;
             }
             existingItem.quantity += 1;
@@ -33,20 +37,22 @@ export const Cart = {
                 name: product.name,
                 price: Number(product.price),
                 image_url: product.image_url,
-                stock: product.stock,
+                stock: targetStock,
+                size: product.size || "Tamanho Único",
+                has_sizes: product.has_sizes,
                 quantity: 1
             });
         }
 
         this.save(cart);
         this.updateUI();
-        showToast(`${product.name} adicionado ao carrinho!`, 'success');
+        showToast(`${product.name} (${product.size}) adicionado!`, 'success');
         return true;
     },
 
-    updateQuantity(id, delta) {
+    updateQuantity(id, size, delta) {
         let cart = this.getItems();
-        const item = cart.find(i => i.id === id);
+        const item = cart.find(i => i.id === id && i.size === size);
         if (item) {
             const newQty = item.quantity + delta;
             if (newQty > item.stock) {
@@ -54,7 +60,7 @@ export const Cart = {
                 return;
             }
             if (newQty <= 0) {
-                this.removeItem(id);
+                this.removeItem(id, size);
                 return;
             }
             item.quantity = newQty;
@@ -63,8 +69,8 @@ export const Cart = {
         }
     },
 
-    removeItem(id) {
-        let cart = this.getItems().filter(item => item.id !== id);
+    removeItem(id, size) {
+        let cart = this.getItems().filter(item => !(item.id === id && item.size === size));
         this.save(cart);
         this.updateUI();
         showToast('Produto removido do carrinho.', 'info');
@@ -114,14 +120,15 @@ export const Cart = {
                 <img src="${item.image_url}" width="60" style="object-fit: cover; aspect-ratio: 1/1; border-radius: 4px;">
                 <div class="cart-item-info" style="flex:1; margin-left:1rem;">
                     <h4 style="font-size:0.85rem; margin-bottom:0.2rem;">${item.name}</h4>
+                    <p style="font-size:0.75rem; color:var(--accent); font-weight:700; margin-bottom:0.2rem;">Tam: ${item.size}</p>
                     <p style="font-size:0.8rem; color:#666;">${formatCurrency(item.price)}</p>
                     <div class="cart-qty-controls" style="margin-top:0.5rem; display:flex; align-items:center; gap:0.8rem;">
-                        <button onclick="Cart.updateQuantity('${item.id}', -1)">-</button>
+                        <button onclick="Cart.updateQuantity('${item.id}', '${item.size}', -1)">-</button>
                         <span style="font-size:0.9rem; font-weight:700;">${item.quantity}</span>
-                        <button onclick="Cart.updateQuantity('${item.id}', 1)">+</button>
+                        <button onclick="Cart.updateQuantity('${item.id}', '${item.size}', 1)">+</button>
                     </div>
                 </div>
-                <button class="btn-remove" onclick="Cart.removeItem('${item.id}')" style="font-size:1.2rem;">&times;</button>
+                <button class="btn-remove" onclick="Cart.removeItem('${item.id}', '${item.size}')" style="font-size:1.2rem;">&times;</button>
             `;
             list.appendChild(div);
         });
@@ -131,12 +138,6 @@ export const Cart = {
 
     init() {
         this.updateUI();
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.checkout-btn')) {
-                e.preventDefault();
-                this.checkout();
-            }
-        });
     }
 };
 
