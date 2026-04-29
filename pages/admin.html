@@ -46,6 +46,7 @@
                         <a href="#orders-section" class="nav-item">Pedidos</a>
                         <a href="#products-section" class="nav-item">Produtos</a>
                         <a href="#carousel-section" class="nav-item">Carrossel</a>
+                        <a href="#settings-section" class="nav-item">Configurações</a>
                     </div>
                 </div>
                 <div class="admin-user-actions">
@@ -171,8 +172,56 @@
                     </table>
                 </div>
             </section>
+
+            <!-- Seção 5: Configurações -->
+            <section id="settings-section" class="card">
+                <header class="section-header-row">
+                    <h2 class="card-title">Configurações do Site</h2>
+                </header>
+                
+                <div style="max-width: 600px; margin-top: 1rem;">
+                    <form id="settings-form">
+                        <div class="admin-card" style="border: 1px solid var(--gray-200); margin-bottom: 2rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Modo Privado da Loja</h3>
+                            <p style="color: var(--gray-500); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                                Quando ativado, visitantes precisarão de uma senha para acessar qualquer página da loja. 
+                                A senha é a mesma utilizada para o login administrativo.
+                            </p>
+
+                            <div style="display: flex; align-items: center; gap: 1rem; background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md);">
+                                <label class="switch">
+                                    <input type="checkbox" id="set-store-locked">
+                                    <span class="slider round"></span>
+                                </label>
+                                <div>
+                                    <strong style="display: block; font-size: 0.9rem;">Ativar Bloqueio Total</strong>
+                                    <small id="lock-status-text" style="color: var(--gray-500);">A loja está pública no momento.</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1.5rem;">
+                                <label>E-mail de Autenticação para Bloqueio</label>
+                                <input type="email" id="set-admin-email" placeholder="admin@gmj.com" required>
+                                <small style="color: var(--gray-400);">Este é o e-mail usado para validar a senha na tela de bloqueio.</small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-buy" style="width: 200px;">Salvar Configurações</button>
+                    </form>
+                </div>
+            </section>
         </main>
     </div>
+
+    <!-- Estilos para o Switch (Toggle) -->
+    <style>
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
 
     <!-- Modais (Carrossel, Produto, Pedido) -->
     <div id="slide-modal" class="modal">
