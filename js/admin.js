@@ -10,6 +10,7 @@ let state = {
     products: [],
     orders: [],
     carousel: [],
+    settings: null,
     filter: 'all',
     ordersLimit: 10,
     charts: { revenue: null, status: null }
@@ -29,32 +30,42 @@ async function initAdmin() {
     document.getElementById('admin-dashboard').classList.remove('dashboard-hidden');
     document.getElementById('user-display').innerText = session.user.email;
     
+    // Se não houver e-mail de auth configurado, sugere o e-mail logado
+    if (!state.settings?.admin_email_auth) {
+        const emailInput = document.getElementById('set-admin-email');
+        if (emailInput) emailInput.value = session.user.email;
+    }
+
     setupOnePageNavigation();
     setupImageUploads();
     setupVariationToggle();
     setupLoadMoreOrders();
     setupModalClosers();
+    setupSettingsForm();
     refreshData();
 }
 
 // --- GESTÃO DE DADOS ---
 async function refreshData() {
     try {
-        const [pRes, oRes, cRes] = await Promise.all([
+        const [pRes, oRes, cRes, sRes] = await Promise.all([
             _supabase.from('products').select('*').order('name'),
             _supabase.from('orders').select('*').order('created_at', { ascending: false }),
-            _supabase.from('carousel_slides').select('*').order('order_index', { ascending: true })
+            _supabase.from('carousel_slides').select('*').order('order_index', { ascending: true }),
+            _supabase.from('site_settings').select('*').eq('id', '00000000-0000-0000-0000-000000000000').single()
         ]);
 
         state.products = pRes.data || [];
         state.orders = oRes.data || [];
         state.carousel = cRes.data || [];
+        state.settings = sRes.data || null;
         
         updateMetrics();
         renderOrders();
         renderProducts();
         renderCarousel();
         renderCharts();
+        renderSettings();
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
         showToast("Erro ao carregar dados", "error");
@@ -153,6 +164,55 @@ function renderCarousel() {
                 </div>
             </td>`;
         list.appendChild(tr);
+    });
+}
+
+function renderSettings() {
+    if (!state.settings) return;
+    
+    const lockedInput = document.getElementById('set-store-locked');
+    const emailInput = document.getElementById('set-admin-email');
+    const statusText = document.getElementById('lock-status-text');
+
+    if (lockedInput) lockedInput.checked = state.settings.store_locked;
+    if (emailInput) emailInput.value = state.settings.admin_email_auth || '';
+    
+    if (statusText) {
+        statusText.innerText = state.settings.store_locked 
+            ? "A loja está PRIVADA. Acesso somente com senha." 
+            : "A loja está PÚBLICA no momento.";
+        statusText.style.color = state.settings.store_locked ? "var(--error)" : "var(--gray-500)";
+    }
+}
+
+function setupSettingsForm() {
+    const form = document.getElementById('settings-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const isLocked = document.getElementById('set-store-locked').checked;
+        const adminEmail = document.getElementById('set-admin-email').value;
+
+        try {
+            const { error } = await _supabase
+                .from('site_settings')
+                .update({ 
+                    store_locked: isLocked, 
+                    admin_email_auth: adminEmail,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', '00000000-0000-0000-0000-000000000000');
+
+            if (error) throw error;
+
+            showToast("Configurações salvas com sucesso!", "success");
+            refreshData();
+        } catch (err) {
+            console.error("Erro ao salvar configurações:", err);
+            showToast("Erro ao salvar configurações", "error");
+        }
     });
 }
 
