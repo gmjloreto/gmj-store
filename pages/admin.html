@@ -227,6 +227,24 @@
                             </div>
                         </div>
 
+                        <div class="admin-card" style="border: 1px solid var(--gray-200); margin-bottom: 2rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Processamento de Checkout</h3>
+                            <p style="color: var(--gray-500); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                                <strong>Modo Simplificado:</strong> Quando ativado, o checkout não exigirá CPF, E-mail nem Endereço (ideal para vendas rápidas ou presenciais).
+                            </p>
+
+                            <div style="display: flex; align-items: center; gap: 1rem; background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md);">
+                                <label class="switch">
+                                    <input type="checkbox" id="set-checkout-simplified">
+                                    <span class="slider round"></span>
+                                </label>
+                                <div>
+                                    <strong style="display: block; font-size: 0.9rem;">Ativar Checkout Simplificado</strong>
+                                    <small id="checkout-mode-text" style="color: var(--gray-500);">O checkout está no modo PADRÃO.</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn-buy" style="width: 200px;">Salvar Configurações</button>
                     </form>
                 </div>
