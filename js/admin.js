@@ -38,6 +38,7 @@ async function initAdmin() {
 
     setupOnePageNavigation();
     setupImageUploads();
+    setupImageRemovers();
     setupVariationToggle();
     setupLoadMoreOrders();
     setupModalClosers();
@@ -383,9 +384,22 @@ document.getElementById('product-form')?.addEventListener('submit', async (e) =>
     const id = document.getElementById('product-id').value;
     const hasSizes = document.getElementById('p-has-sizes').checked;
 
+    const mainImage = document.getElementById('p-image').value;
+    if (!mainImage) {
+        showToast("A imagem principal é obrigatória!", "error");
+        return;
+    }
+
+    const price = parseFloat(document.getElementById('p-price').value);
+    if (isNaN(price)) {
+        showToast("Por favor, insira um preço válido.", "error");
+        return;
+    }
+
     let totalStock = 0;
     const sizesToSave = ["P", "M", "G", "GG", "XG", "G1", "G2"].map(s => {
-        const qty = parseInt(document.getElementById(`p-stock-${s.toLowerCase()}`).value) || 0;
+        const input = document.getElementById(`p-stock-${s.toLowerCase()}`);
+        const qty = input ? (parseInt(input.value) || 0) : 0;
         totalStock += qty;
         return { size: s, stock: qty };
     });
@@ -396,9 +410,9 @@ document.getElementById('product-form')?.addEventListener('submit', async (e) =>
 
     const data = {
         name: document.getElementById('p-name').value,
-        price: parseFloat(document.getElementById('p-price').value),
-        description: document.getElementById('p-description').value,
-        image_url: document.getElementById('p-image').value,
+        price: price,
+        description: document.getElementById('p-description').value || '',
+        image_url: mainImage,
         image_url_2: document.getElementById('p-image-2').value || null,
         image_url_3: document.getElementById('p-image-3').value || null,
         has_sizes: hasSizes,
@@ -410,9 +424,11 @@ document.getElementById('product-form')?.addEventListener('submit', async (e) =>
         const { data: p, error } = await _supabase.from('products').upsert({ ...(id ? { id } : {}), ...data }).select().single();
         if (error) throw error;
 
-        // 2. Se tiver tamanhos, limpamos e inserimos as novas quantidades (mais robusto)
+        // 2. Se tiver tamanhos, limpamos e inserimos as novas quantidades
         if (hasSizes) {
-            await _supabase.from('product_sizes').delete().eq('product_id', p.id);
+            const { error: dErr } = await _supabase.from('product_sizes').delete().eq('product_id', p.id);
+            if (dErr) throw dErr;
+
             const sizeData = sizesToSave.map(s => ({ product_id: p.id, size: s.size, stock: s.stock }));
             const { error: sErr } = await _supabase.from('product_sizes').insert(sizeData);
             if (sErr) throw sErr;
@@ -423,18 +439,25 @@ document.getElementById('product-form')?.addEventListener('submit', async (e) =>
         refreshData();
     } catch (err) { 
         console.error("Erro ao salvar produto:", err);
-        showToast("Erro ao salvar", "error"); 
+        showToast(`Erro ao salvar: ${err.message || 'Verifique os dados'}`, "error"); 
     }
 });
 
 document.getElementById('slide-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('slide-id').value;
+    const slideImage = document.getElementById('s-image').value;
+
+    if (!slideImage) {
+        showToast("A imagem do slide é obrigatória!", "error");
+        return;
+    }
+
     const data = {
         title: document.getElementById('s-title').value,
-        subtitle: document.getElementById('s-subtitle').value,
+        subtitle: document.getElementById('s-subtitle').value || '',
         order_index: parseInt(document.getElementById('s-order').value) || 0,
-        image_url: document.getElementById('s-image').value
+        image_url: slideImage
     };
     try {
         const { error } = id ? await _supabase.from('carousel_slides').update(data).eq('id', id) : await _supabase.from('carousel_slides').insert([data]);
@@ -442,7 +465,10 @@ document.getElementById('slide-form')?.addEventListener('submit', async (e) => {
         showToast("Slide salvo!", "success");
         document.getElementById('slide-modal').classList.remove('show');
         refreshData();
-    } catch (err) { showToast("Erro ao salvar slide", "error"); }
+    } catch (err) { 
+        console.error("Erro ao salvar slide:", err);
+        showToast(`Erro ao salvar slide: ${err.message || ''}`, "error"); 
+    }
 });
 
 // --- AUXILIARES ---
@@ -498,7 +524,36 @@ function setupImageUploads() {
 
 function updateImagePreview(id, url) {
     const preview = document.getElementById(`${id}-preview`);
-    if (preview) preview.innerHTML = url ? `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">` : '<span>Sem imagem</span>';
+    if (!preview) return;
+
+    // Mantém o botão de remover se ele existir no DOM original
+    const removeBtn = preview.querySelector('.btn-remove-image');
+    
+    // Define o texto padrão baseado no campo
+    const defaultText = (id === 'p-image-2' || id === 'p-image-3') ? '-' : 'Sem imagem';
+
+    preview.innerHTML = url 
+        ? `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">` 
+        : `<span>${defaultText}</span>`;
+    
+    if (removeBtn) preview.appendChild(removeBtn);
+}
+
+function setupImageRemovers() {
+    document.querySelectorAll('.btn-remove-image').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (input) input.value = '';
+            
+            // Limpa o input de arquivo também para permitir re-upload do mesmo arquivo
+            const fileInput = document.querySelector(`.p-image-upload[data-target="${targetId}"]`);
+            if (fileInput) fileInput.value = '';
+            
+            updateImagePreview(targetId, null);
+        });
+    });
 }
 
 function setupVariationToggle() {
@@ -525,12 +580,21 @@ function setupModalClosers() {
     document.getElementById('btn-add-product')?.addEventListener('click', () => {
         document.getElementById('product-form').reset();
         document.getElementById('product-id').value = '';
-        ['p-image', 'p-image-2', 'p-image-3'].forEach(id => updateImagePreview(id, null));
+        // Limpar valores dos inputs hidden de imagem e seus previews
+        ['p-image', 'p-image-2', 'p-image-3'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.value = '';
+            updateImagePreview(id, null);
+        });
+        document.getElementById('modal-title').innerText = 'Novo Produto';
         document.getElementById('product-modal').classList.add('show');
     });
     document.getElementById('btn-add-slide')?.addEventListener('click', () => {
         document.getElementById('slide-form').reset();
         document.getElementById('slide-id').value = '';
+        // Limpar valor do input hidden de imagem e preview
+        const imgInput = document.getElementById('s-image');
+        if (imgInput) imgInput.value = '';
         updateImagePreview('s-image', null);
         document.getElementById('slide-modal-title').innerText = 'Novo Slide';
         document.getElementById('slide-modal').classList.add('show');
