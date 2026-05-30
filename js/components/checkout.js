@@ -30,6 +30,7 @@ const addressFieldsWrapper2 = document.getElementById('address-fields-wrapper-2'
 const addressDeliveryLabel = document.getElementById('address-delivery-label');
 
 let currentShipping = { price: 0, days: 0, region: '' };
+let isSimplifiedMode = false;
 
 // --- INICIALIZAÇÃO ---
 async function initCheckout() {
@@ -39,22 +40,56 @@ async function initCheckout() {
         setTimeout(() => window.location.href = '../index.html', 2000);
         return;
     }
+    
+    await checkSimplifiedMode();
     setupMasks();
     renderSummary();
     setupShippingListeners();
     handlePickupOption(pickupCheckbox.checked); 
 }
 
+async function checkSimplifiedMode() {
+    try {
+        const { data: settings } = await _supabase.from('site_settings').select('checkout_simplified').single();
+        if (settings && settings.checkout_simplified) {
+            isSimplifiedMode = true;
+            applySimplifiedUI();
+        }
+    } catch (err) {
+        console.error("Erro ao verificar modo de checkout:", err);
+    }
+}
+
+function applySimplifiedUI() {
+    // Esconde CPF, Email e Seção de Entrega
+    if (fields.cpf) fields.cpf.closest('.form-group').style.display = 'none';
+    if (fields.email) fields.email.closest('.form-group').style.display = 'none';
+    
+    const deliverySection = document.querySelector('.delivery-section');
+    if (deliverySection) deliverySection.style.display = 'none';
+
+    // Remove obrigatoriedade
+    [fields.cpf, fields.email, fields.cep, fields.street, fields.number, fields.neighborhood, fields.cityUf].forEach(f => {
+        if (f) {
+            f.required = false;
+            f.disabled = true;
+        }
+    });
+
+    // Força modo retirada internamente para evitar frete
+    currentShipping = { price: 0, days: 0, region: 'Simplificado' };
+}
+
 // --- MÁSCARAS E VALIDAÇÕES EM TEMPO REAL ---
 function setupMasks() {
-    fields.cep.addEventListener('input', (e) => {
+    fields.cep?.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 5) value = value.slice(0, 5) + '-' + value.slice(5, 8);
         e.target.value = value;
         if (value.length === 9) calculateShipping(value);
     });
 
-    fields.phone.addEventListener('input', (e) => {
+    fields.phone?.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 11) value = value.slice(0, 11);
         if (value.length > 10) value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
@@ -63,7 +98,7 @@ function setupMasks() {
         e.target.value = value;
     });
 
-    fields.cpf.addEventListener('input', (e) => {
+    fields.cpf?.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 11) value = value.slice(0, 11);
         value = value.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
@@ -89,6 +124,8 @@ function setupShippingListeners() {
 }
 
 function handlePickupOption(isChecked) {
+    if (isSimplifiedMode) return; // Ignora se estiver no modo simplificado
+
     const enable = !isChecked;
     [fields.cep, fields.street, fields.number, fields.neighborhood, fields.cityUf].forEach(f => {
         if (f) {
@@ -109,6 +146,7 @@ function handlePickupOption(isChecked) {
 }
 
 async function calculateShipping(cep) {
+    if (isSimplifiedMode) return;
     try {
         // 1. Busca os dados de endereço via API (ViaCEP)
         const addressData = await Shipping.validateCep(cep);
@@ -182,9 +220,9 @@ checkoutForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     // Validações básicas
-    if (!validateCPF(fields.cpf.value)) return showToast('CPF inválido', 'error');
+    if (!isSimplifiedMode && !validateCPF(fields.cpf.value)) return showToast('CPF inválido', 'error');
     if (!fields.privacy.checked) return showToast('Você precisa aceitar os termos de privacidade', 'error');
-    if (!pickupCheckbox.checked && !fields.cityUf.value) return showToast('Calcule o frete informando um CEP válido', 'error');
+    if (!isSimplifiedMode && !pickupCheckbox.checked && !fields.cityUf.value) return showToast('Calcule o frete informando um CEP válido', 'error');
 
     const btn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = btn.innerText;
@@ -199,16 +237,16 @@ checkoutForm?.addEventListener('submit', async (e) => {
 
         const orderData = {
             customer_name: fields.name.value,
-            customer_cpf: fields.cpf.value,
-            customer_email: fields.email.value,
+            customer_cpf: isSimplifiedMode ? 'SIMPLIFICADO' : fields.cpf.value,
+            customer_email: isSimplifiedMode ? 'simplificado@gmj.com' : fields.email.value,
             customer_phone: fields.phone.value,
             total_price: total,
             status: 'pending',
             items: [], // Satisfaz constraint NOT NULL legado do DB
-            shipping_info: pickupCheckbox.checked ? {
-                method: 'pickup',
-                address: 'Retirada na Igreja',
-                region: 'Retirada'
+            shipping_info: (pickupCheckbox.checked || isSimplifiedMode) ? {
+                method: isSimplifiedMode ? 'simplified' : 'pickup',
+                address: isSimplifiedMode ? 'Venda Rápida' : 'Retirada na Igreja',
+                region: isSimplifiedMode ? 'Presencial' : 'Retirada'
             } : {
                 method: 'delivery',
                 cep: fields.cep.value,
