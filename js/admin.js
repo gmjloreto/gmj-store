@@ -53,13 +53,13 @@ async function refreshData() {
             _supabase.from('products').select('*').order('name'),
             _supabase.from('orders').select('*').order('created_at', { ascending: false }),
             _supabase.from('carousel_slides').select('*').order('order_index', { ascending: true }),
-            _supabase.from('site_settings').select('*').eq('id', '00000000-0000-0000-0000-000000000000').single()
+            _supabase.from('site_settings').select('*')
         ]);
 
         state.products = pRes.data || [];
         state.orders = oRes.data || [];
         state.carousel = cRes.data || [];
-        state.settings = sRes.data || null;
+        state.settings = (sRes.data && sRes.data.length > 0) ? sRes.data[0] : null;
         
         updateMetrics();
         renderOrders();
@@ -193,6 +193,11 @@ function setupSettingsForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        if (!state.settings) {
+            showToast("Configurações não carregadas.", "error");
+            return;
+        }
+
         const isLocked = document.getElementById('set-store-locked').checked;
         const adminEmail = document.getElementById('set-admin-email').value;
 
@@ -204,7 +209,7 @@ function setupSettingsForm() {
                     admin_email_auth: adminEmail,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', '00000000-0000-0000-0000-000000000000');
+                .eq('id', state.settings.id);
 
             if (error) throw error;
 
@@ -212,7 +217,7 @@ function setupSettingsForm() {
             refreshData();
         } catch (err) {
             console.error("Erro ao salvar configurações:", err);
-            showToast("Erro ao salvar configurações", "error");
+            showToast(`Erro ao salvar: ${err.message}`, "error");
         }
     });
 }
