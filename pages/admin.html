@@ -255,9 +255,12 @@
                 <div class="form-group">
                     <label>Imagem de Fundo</label>
                     <div class="upload-wrapper">
-                        <div class="upload-preview" id="s-image-preview"><span>Sem imagem</span></div>
+                        <div class="upload-preview" id="s-image-preview">
+                            <span>Sem imagem</span>
+                            <button type="button" class="btn-remove-image" data-target="s-image">&times;</button>
+                        </div>
                         <input type="file" class="p-image-upload" data-target="s-image" accept="image/*">
-                        <input type="hidden" id="s-image" required>
+                        <input type="hidden" id="s-image">
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -313,16 +316,22 @@
                         <div class="form-group">
                             <label>Imagem Principal *</label>
                             <div class="upload-wrapper">
-                                <div class="upload-preview" id="p-image-preview"><span>Sem imagem</span></div>
+                                <div class="upload-preview" id="p-image-preview">
+                                    <span>Sem imagem</span>
+                                    <button type="button" class="btn-remove-image" data-target="p-image">&times;</button>
+                                </div>
                                 <input type="file" class="p-image-upload" data-target="p-image" accept="image/*">
-                                <input type="hidden" id="p-image" required>
+                                <input type="hidden" id="p-image">
                             </div>
                         </div>
                         <div class="upload-grid-secondary">
                             <div class="form-group">
                                 <label>Img 2</label>
                                 <div class="upload-wrapper">
-                                    <div class="upload-preview" id="p-image-2-preview"><span>-</span></div>
+                                    <div class="upload-preview" id="p-image-2-preview">
+                                        <span>-</span>
+                                        <button type="button" class="btn-remove-image" data-target="p-image-2">&times;</button>
+                                    </div>
                                     <input type="file" class="p-image-upload" data-target="p-image-2" accept="image/*">
                                     <input type="hidden" id="p-image-2">
                                 </div>
@@ -330,7 +339,10 @@
                             <div class="form-group">
                                 <label>Img 3</label>
                                 <div class="upload-wrapper">
-                                    <div class="upload-preview" id="p-image-3-preview"><span>-</span></div>
+                                    <div class="upload-preview" id="p-image-3-preview">
+                                        <span>-</span>
+                                        <button type="button" class="btn-remove-image" data-target="p-image-3">&times;</button>
+                                    </div>
                                     <input type="file" class="p-image-upload" data-target="p-image-3" accept="image/*">
                                     <input type="hidden" id="p-image-3">
                                 </div>
