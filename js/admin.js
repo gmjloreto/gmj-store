@@ -173,16 +173,26 @@ function renderSettings() {
     
     const lockedInput = document.getElementById('set-store-locked');
     const emailInput = document.getElementById('set-admin-email');
+    const simplifiedInput = document.getElementById('set-checkout-simplified');
     const statusText = document.getElementById('lock-status-text');
+    const modeText = document.getElementById('checkout-mode-text');
 
     if (lockedInput) lockedInput.checked = state.settings.store_locked;
     if (emailInput) emailInput.value = state.settings.admin_email_auth || '';
+    if (simplifiedInput) simplifiedInput.checked = state.settings.checkout_simplified || false;
     
     if (statusText) {
         statusText.innerText = state.settings.store_locked 
             ? "A loja está PRIVADA. Acesso somente com senha." 
             : "A loja está PÚBLICA no momento.";
         statusText.style.color = state.settings.store_locked ? "var(--error)" : "var(--gray-500)";
+    }
+
+    if (modeText) {
+        modeText.innerText = state.settings.checkout_simplified 
+            ? "O checkout está no modo SIMPLIFICADO." 
+            : "O checkout está no modo PADRÃO.";
+        modeText.style.color = state.settings.checkout_simplified ? "var(--success)" : "var(--gray-500)";
     }
 }
 
@@ -200,6 +210,7 @@ function setupSettingsForm() {
 
         const isLocked = document.getElementById('set-store-locked').checked;
         const adminEmail = document.getElementById('set-admin-email').value;
+        const isSimplified = document.getElementById('set-checkout-simplified').checked;
 
         try {
             const { error } = await _supabase
@@ -207,6 +218,7 @@ function setupSettingsForm() {
                 .update({ 
                     store_locked: isLocked, 
                     admin_email_auth: adminEmail,
+                    checkout_simplified: isSimplified,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', state.settings.id);
